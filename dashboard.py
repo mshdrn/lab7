@@ -6,15 +6,13 @@ import seaborn as sns
 import pandas as pd
 import numpy as np
 
-# =====================================================================
-# ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ И НАСТРОЙКИ ВАРИАНТА №51
-# =====================================================================
+
 df_raw = None
 df_work = None
 fig = plt.Figure(figsize=(10, 5.5), dpi=100)
 canvas = None
 current_chart = "line"
-metric_frame = None  # Контейнер для динамического скрытия метрики
+metric_frame = None  
 
 STUDENT_INFO = "Обухов М.С. | Группа: ИВТб-1302 | Вариант: №51"
 
@@ -23,9 +21,7 @@ plt.rcParams['axes.unicode_minus'] = False
 sns.set_theme(style="whitegrid")
 
 
-# =====================================================================
 # ЭТАП 2. ПРЕДОБРАБОТКА
-# =====================================================================
 def load_data():
     global df_raw
     try:
@@ -50,7 +46,6 @@ def preprocess_data():
 
     df['datetime'] = pd.to_datetime(df['ts'], unit='s')
 
-    # Порядок дней для тепловой карты
     day_order = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
     df['day_of_week'] = pd.Categorical(df['datetime'].dt.day_name(), categories=day_order, ordered=True)
 
@@ -68,7 +63,6 @@ def preprocess_data():
 
 
 def get_filtered_data():
-    """Динамический фильтр: только срез по строкам"""
     df = df_work.copy()
 
     try:
@@ -91,9 +85,7 @@ def get_filtered_data():
     return df
 
 
-# =====================================================================
 # ЭТАП 4. ИНТЕРАКТИВНЫЕ ГРАФИКИ
-# =====================================================================
 def plot_line():
     global current_chart
     current_chart = "line"
@@ -123,7 +115,6 @@ def plot_bar():
     global current_chart
     current_chart = "bar"
 
-    # Показываем выбор метрики только для столбчатой диаграммы
     if metric_frame: metric_frame.pack(side=tk.LEFT)
 
     fig.clear()
@@ -154,7 +145,6 @@ def plot_scatter():
     global current_chart
     current_chart = "scatter"
 
-    # Скрываем выбор метрики
     if metric_frame: metric_frame.pack_forget()
 
     fig.clear()
@@ -179,7 +169,6 @@ def plot_heat_map():
     global current_chart
     current_chart = "heatmap"
 
-    # Скрываем выбор метрики
     if metric_frame: metric_frame.pack_forget()
 
     fig.clear()
@@ -201,9 +190,7 @@ def plot_heat_map():
     canvas.draw_idle()
 
 
-# =====================================================================
-# ИНТЕРФЕЙС И УПРАВЛЕНИЕ (TKINTER)
-# =====================================================================
+# TKINTER
 def refresh_data(event=None):
     if current_chart == "line":
         plot_line()
@@ -241,17 +228,15 @@ def main():
     row2 = tk.Frame(ctrl_frame, bg="#e9ecef")
     row2.pack(fill=tk.X, pady=2)
 
-    # --- СТРОКА 1: Выбор графиков и системные кнопки ---
     tk.Label(row1, text="Вид графика:", bg="#e9ecef", font=("Arial", 9, "bold")).pack(side=tk.LEFT, padx=(0, 5))
     tk.Button(row1, text="Окно k=50 (viewers, ts)", command=plot_line, width=22).pack(side=tk.LEFT, padx=2)
     tk.Button(row1, text="Группы ch_id (viewers, bit)", command=plot_bar, width=25).pack(side=tk.LEFT, padx=2)
     tk.Button(row1, text="Ratio (bit, eng, drops)", command=plot_scatter, width=22).pack(side=tk.LEFT, padx=2)
     tk.Button(row1, text="Нестабильность (drops, ts)", command=plot_heat_map, width=25).pack(side=tk.LEFT, padx=2)
 
-    tk.Button(row1, text="💾 Сохранить", command=export_plot, width=10, bg="#d4edda").pack(side=tk.RIGHT, padx=5)
-    tk.Button(row1, text="🔄 Обновить", command=refresh_data, width=10, bg="#cce5ff").pack(side=tk.RIGHT, padx=5)
+    tk.Button(row1, text=" Сохранить", command=export_plot, width=10, bg="#d4edda").pack(side=tk.RIGHT, padx=5)
+    tk.Button(row1, text=" Обновить", command=refresh_data, width=10, bg="#cce5ff").pack(side=tk.RIGHT, padx=5)
 
-    # --- СТРОКА 2: Фильтры и срезы данных ---
     tk.Label(row2, text="Фильтры:", bg="#e9ecef", font=("Arial", 9, "bold")).pack(side=tk.LEFT, padx=(0, 5))
 
     tk.Label(row2, text="Старт со строки (index):", bg="#e9ecef").pack(side=tk.LEFT)
@@ -261,12 +246,11 @@ def main():
     start_entry.bind("<Return>", refresh_data)
 
     tk.Label(row2, text="  |  Кол-во строк (limit):", bg="#e9ecef").pack(side=tk.LEFT)
-    num_rows_var = tk.StringVar(value="100000")  # Оптимально для быстрого старта 2млн строк
+    num_rows_var = tk.StringVar(value="100000")
     num_entry = tk.Entry(row2, textvariable=num_rows_var, width=8)
     num_entry.pack(side=tk.LEFT, padx=2)
     num_entry.bind("<Return>", refresh_data)
 
-    # Создаем изолированный контейнер для метрики (по умолчанию скрыт, т.к. первый график — линейный)
     metric_frame = tk.Frame(row2, bg="#e9ecef")
     tk.Label(metric_frame, text="  |  Метрика (viewers/bit):", bg="#e9ecef").pack(side=tk.LEFT)
     agg_filter_var = tk.StringVar(value="Средние зрители")
@@ -276,7 +260,6 @@ def main():
     agg_combo.pack(side=tk.LEFT, padx=2)
     agg_combo.bind("<<ComboboxSelected>>", refresh_data)
 
-    # Область отрисовки графика
     plot_frame = tk.Frame(root, bg="white", relief=tk.SUNKEN, bd=1)
     plot_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=5)
 
@@ -287,7 +270,7 @@ def main():
     toolbar.update()
     toolbar.pack(side=tk.TOP, fill=tk.X)
 
-    plot_line()  # Запуск первого графика (метрика скроется автоматически)
+    plot_line()  
     root.mainloop()
 
 
